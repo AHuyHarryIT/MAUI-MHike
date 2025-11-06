@@ -3,13 +3,11 @@
     x:Class="MAUI_MHike.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:MAUI_MHike"
-    Shell.FlyoutBehavior="Disabled"
-    Title="MAUI_MHike">
+    xmlns:views="clr-namespace:MAUI_MHike.Views">
 
+    <!-- Single top-level content -->
     <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
+        Title="Hikes"
+        ContentTemplate="{DataTemplate views:MainPage}"
         Route="MainPage" />
-
 </Shell>

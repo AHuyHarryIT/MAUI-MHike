@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="MAUI_MHike.Views.HikeFormPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Hike">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="12">
+            <Label x:Name="TitleLabel" Text="Add Hike" FontSize="20" FontAttributes="Bold" />
+
+            <Entry x:Name="NameEntry" Placeholder="Name *" />
+            <Entry x:Name="LocationEntry" Placeholder="Location *" />
+
+            <DatePicker x:Name="DatePicker" />
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                <Label Text="Parking available" VerticalOptions="Center" />
+                <Switch x:Name="ParkingSwitch" Grid.Column="1" />
+            </Grid>
+
+            <Entry x:Name="LengthEntry" Placeholder="Length (km) *" Keyboard="Numeric" />
+
+            <!-- Difficulty as Picker (1..5 with labels) -->
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                <Label Text="Difficulty" VerticalOptions="Center" />
+                <Picker x:Name="DifficultyPicker" Grid.Column="1" Title="Choose 1–5">
+                    <Picker.ItemsSource>
+                        <x:Array Type="{x:Type x:String}">
+                            <x:String>1 - Very Easy</x:String>
+                            <x:String>2 - Easy</x:String>
+                            <x:String>3 - Medium</x:String>
+                            <x:String>4 - Hard</x:String>
+                            <x:String>5 - Very Hard</x:String>
+                        </x:Array>
+                    </Picker.ItemsSource>
+                </Picker>
+            </Grid>
+
+            <Editor x:Name="DescEditor" Placeholder="Description (optional)" AutoSize="TextChanges" MinimumHeightRequest="80" />
+
+            <HorizontalStackLayout Spacing="12" Margin="0,8,0,0">
+                <Button Text="Save" Clicked="OnSaveClicked" />
+                <Button Text="Cancel" Clicked="OnCancelClicked" />
+            </HorizontalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

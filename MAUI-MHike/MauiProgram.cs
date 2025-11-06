@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using MAUI_MHike.Services;
+using Microsoft.Extensions.Logging;
 
 namespace MAUI_MHike
 {
@@ -15,9 +16,13 @@ namespace MAUI_MHike
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
 
-#if DEBUG
-    		builder.Logging.AddDebug();
-#endif
+            // Services
+            builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
+            builder.Services.AddSingleton<IHikeRepository, HikeRepository>();
+
+            // Pages (optional DI)
+            builder.Services.AddTransient<Views.MainPage>();
+            builder.Services.AddTransient<Views.HikeFormPage>();
 
             return builder.Build();
         }

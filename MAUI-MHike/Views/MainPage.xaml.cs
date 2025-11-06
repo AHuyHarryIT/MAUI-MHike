@@ -1,42 +1,78 @@
 using MAUI_MHike.Models;
+using MAUI_MHike.Services;
 using System.Collections.ObjectModel;
 
 namespace MAUI_MHike.Views;
 
-
 public partial class MainPage : ContentPage
 {
+    private readonly IHikeRepository _repo;
     public ObservableCollection<Hike> Hikes { get; } = new();
+    private string? _lastQuery;
 
-    public MainPage()
+    public MainPage(IHikeRepository repo)
     {
         InitializeComponent();
+        _repo = repo;
         BindingContext = this;
+    }
 
-        // Dummy data (until persistence wired)
-        Hikes.Add(new Hike { Name = "Langbiang Peak", Location = "Da Lat", Date = DateTime.Today.AddDays(-30), Parking = true, LengthKm = 12.5, Difficulty = 5, Description = "Pine forest" });
-        Hikes.Add(new Hike { Name = "Ba Den Mountain", Location = "Tay Ninh", Date = DateTime.Today.AddDays(-10), Parking = false, LengthKm = 6.3, Difficulty = 3, Description = "Sunrise!" });
-        Hikes.Add(new Hike { Name = "Fansipan Trail", Location = "Lao Cai", Date = DateTime.Today, Parking = true, LengthKm = 14.0, Difficulty = 5, Description = "Roof of Indochina" });
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync(string? q = null)
+    {
+        if (q != null) _lastQuery = q;
+        var list = await _repo.GetAllAsync(_lastQuery);
+        Hikes.Clear();
+        foreach (var h in list) Hikes.Add(h);
     }
 
     private async void OnAddClicked(object sender, EventArgs e)
     {
-        await Shell.Current.GoToAsync(nameof(HikeFormPage), true, new Dictionary<string, object>
-    {
-        { "Mode", "add" }
-    });
+        await Shell.Current.GoToAsync(nameof(HikeFormPage), true, new Dictionary<string, object> {
+            { "Mode", "add" }
+        });
     }
 
-    private async void OnSelected(object sender, SelectionChangedEventArgs e)
+    private async void OnItemTapped(object? sender, TappedEventArgs e)
     {
-        if (e.CurrentSelection?.FirstOrDefault() is Hike h)
-        {
-            await Shell.Current.GoToAsync(nameof(HikeFormPage), true, new Dictionary<string, object>
-        {
+        if (sender is not Element el) return;
+        if (el.BindingContext is not Hike h) return;
+
+        await Shell.Current.GoToAsync(nameof(HikeFormPage), true, new Dictionary<string, object> {
             { "Mode", "edit" },
-            { "Item", h }
+            { "HikeId", h.Id }
         });
-            ((CollectionView)sender).SelectedItem = null;
-        }
+    }
+
+    private async void OnRefreshing(object sender, EventArgs e)
+    {
+        await ReloadAsync();
+        if (sender is RefreshView rv) rv.IsRefreshing = false;
+    }
+
+    private async void OnDeleteSwipeInvoked(object sender, EventArgs e)
+    {
+        if (sender is not SwipeItem swipeItem) return;
+        if (swipeItem.BindingContext is not Hike h) return;
+
+        var ok = await DisplayAlert("Delete", $"Delete \"{h.Name}\"?", "Delete", "Cancel");
+        if (!ok) return;
+
+        await _repo.DeleteAsync(h.Id);
+        Hikes.Remove(h);
+
+        // Close the swipe
+        if (swipeItem.Parent is SwipeItems swipeItems && swipeItems.Parent is SwipeView swipeView)
+            swipeView.Close();
+    }
+
+    private async void SearchBar_SearchButtonPressed(object sender, EventArgs e)
+    {
+        await ReloadAsync(((SearchBar)sender).Text);
     }
 }

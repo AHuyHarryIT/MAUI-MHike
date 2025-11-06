@@ -4,27 +4,70 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     Title="Hikes">
+    <Grid RowDefinitions="Auto,*"
+        Padding="16"
+        RowSpacing="8">
 
-    <Grid RowDefinitions="Auto,*" Padding="16">
+        <!-- Search bar + Add button -->
         <Grid Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="8">
-            <SearchBar x:Name="SearchBar" Placeholder="Search name or location"
-                       SearchCommand="{Binding SearchCommand}" />
-            <Button Grid.Column="1" Text="+ Add" Clicked="OnAddClicked" />
+            <SearchBar x:Name="SearchBar"
+                Placeholder="Search by name or location"
+                SearchButtonPressed="SearchBar_SearchButtonPressed" />
+            <Button Grid.Column="1"
+                Text="+ Add"
+                Clicked="OnAddClicked"
+                BackgroundColor="{DynamicResource Primary}"
+                TextColor="White" />
         </Grid>
 
-        <CollectionView Grid.Row="1" x:Name="HikesView" ItemsSource="{Binding Hikes}" SelectionMode="Single" SelectionChanged="OnSelected">
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <Frame Padding="12" Margin="0,8,0,0" HasShadow="False" BackgroundColor="{DynamicResource SecondaryContainer}">
-                        <VerticalStackLayout>
-                            <Label Text="{Binding Name}" FontAttributes="Bold" FontSize="18" />
-                            <Label Text="{Binding Location}" />
-                            <Label Text="{Binding Date, StringFormat='{}{0:yyyy-MM-dd}'}" />
-                            <Label Text="{Binding Meta}" TextColor="{DynamicResource Primary}" />
-                        </VerticalStackLayout>
-                    </Frame>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
+        <!-- Wrap CollectionView inside RefreshView -->
+        <RefreshView
+            Grid.Row="1"
+            x:Name="RefreshContainer"
+            Refreshing="OnRefreshing">
+
+            <CollectionView
+                x:Name="HikesView"
+                ItemsSource="{Binding Hikes}">
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <SwipeView>
+                            <SwipeView.RightItems>
+                                <SwipeItems Mode="Reveal">
+                                    <SwipeItem Text="Delete"
+                                        IconImageSource="trash.png"
+                                        BackgroundColor="{DynamicResource ErrorContainer}"
+                                        Invoked="OnDeleteSwipeInvoked" />
+                                </SwipeItems>
+                            </SwipeView.RightItems>
+
+                            <Frame Margin="0,6,0,0"
+                                Padding="12"
+                                HasShadow="False"
+                                CornerRadius="8"
+                                BackgroundColor="{DynamicResource SecondaryContainer}">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="{Binding Name}"
+                                        FontAttributes="Bold"
+                                        FontSize="18" />
+                                    <Label Text="{Binding Location}" />
+                                    <Label Text="{Binding Date, StringFormat='{}{0:yyyy-MM-dd}'}"
+                                        TextColor="{DynamicResource Secondary}" />
+                                    <Label Text="{Binding Meta}"
+                                        TextColor="{DynamicResource Primary}" />
+                                </VerticalStackLayout>
+
+                                <!-- Tap to edit (doesn't conflict with swipe) -->
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnItemTapped" />
+                                </Frame.GestureRecognizers>
+                            </Frame>
+                        </SwipeView>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+
     </Grid>
 </ContentPage>

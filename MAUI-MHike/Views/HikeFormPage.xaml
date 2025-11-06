@@ -7,23 +7,51 @@
 
     <ScrollView>
         <VerticalStackLayout Padding="16" Spacing="12">
-            <Label x:Name="TitleLabel" Text="Add Hike" FontSize="20" FontAttributes="Bold" />
 
-            <Entry x:Name="NameEntry" Placeholder="Name *" />
-            <Entry x:Name="LocationEntry" Placeholder="Location *" />
+            <!-- Dynamic title -->
+            <Label x:Name="TitleLabel"
+                   Text="Add Hike"
+                   FontSize="22"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center" />
 
-            <DatePicker x:Name="DatePicker" />
+            <!-- Name -->
+            <Entry x:Name="NameEntry"
+                   Placeholder="Name *"
+                   Keyboard="Default" />
+
+            <!-- Location -->
+            <Entry x:Name="LocationEntry"
+                   Placeholder="Location *"
+                   Keyboard="Default" />
+
+            <!-- Date -->
             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
-                <Label Text="Parking available" VerticalOptions="Center" />
-                <Switch x:Name="ParkingSwitch" Grid.Column="1" />
+                <Label Text="Date" VerticalOptions="Center" />
+                <DatePicker x:Name="DatePicker"
+                            Grid.Column="1" />
             </Grid>
 
-            <Entry x:Name="LengthEntry" Placeholder="Length (km) *" Keyboard="Numeric" />
-
-            <!-- Difficulty as Picker (1..5 with labels) -->
+            <!-- Parking switch -->
             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
-                <Label Text="Difficulty" VerticalOptions="Center" />
-                <Picker x:Name="DifficultyPicker" Grid.Column="1" Title="Choose 1–5">
+                <Label Text="Parking available"
+                       VerticalOptions="Center" />
+                <Switch x:Name="ParkingSwitch"
+                        Grid.Column="1" />
+            </Grid>
+
+            <!-- Length -->
+            <Entry x:Name="LengthEntry"
+                   Placeholder="Length (km) *"
+                   Keyboard="Numeric" />
+
+            <!-- Difficulty -->
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                <Label Text="Difficulty"
+                       VerticalOptions="Center" />
+                <Picker x:Name="DifficultyPicker"
+                        Grid.Column="1"
+                        Title="Choose 1–5">
                     <Picker.ItemsSource>
                         <x:Array Type="{x:Type x:String}">
                             <x:String>1 - Very Easy</x:String>
@@ -36,12 +64,24 @@
                 </Picker>
             </Grid>
 
-            <Editor x:Name="DescEditor" Placeholder="Description (optional)" AutoSize="TextChanges" MinimumHeightRequest="80" />
+            <!-- Description -->
+            <Editor x:Name="DescEditor"
+                    Placeholder="Description (optional)"
+                    AutoSize="TextChanges"
+                    MinimumHeightRequest="80" />
 
-            <HorizontalStackLayout Spacing="12" Margin="0,8,0,0">
-                <Button Text="Save" Clicked="OnSaveClicked" />
-                <Button Text="Cancel" Clicked="OnCancelClicked" />
+            <!-- Buttons -->
+            <HorizontalStackLayout Spacing="12"
+                                   Margin="0,8,0,0">
+                <Button Text="Save"
+                        Clicked="OnSaveClicked"
+                        BackgroundColor="{DynamicResource Primary}"
+                        TextColor="White" />
+                <Button Text="Cancel"
+                        Clicked="OnCancelClicked"
+                        Style="{DynamicResource OutlinedButtonStyle}" />
             </HorizontalStackLayout>
+
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

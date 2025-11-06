@@ -1,67 +1,74 @@
 using MAUI_MHike.Models;
+using MAUI_MHike.Services;
 using System.Globalization;
 
 namespace MAUI_MHike.Views;
 
 
 [QueryProperty(nameof(Mode), "Mode")]
-[QueryProperty(nameof(Item), "Item")]
+[QueryProperty(nameof(HikeId), "HikeId")]
 public partial class HikeFormPage : ContentPage
 {
-    public string Mode { get; set; } = "add"; // "add" or "edit"
-    public Hike? Item { get; set; }
+    private readonly IHikeRepository _repo;
 
-    public HikeFormPage()
+    public string Mode { get; set; } = "add";  // "add" | "edit"
+    public string? HikeId { get; set; }
+    private Hike? _editing;
+
+    public HikeFormPage(IHikeRepository repo)
     {
         InitializeComponent();
-        DifficultyPicker.SelectedIndex = 2; // default "3 - Medium"
+        _repo = repo;
+
+        DifficultyPicker.SelectedIndex = 2; // default 3 - Medium
         DatePicker.Date = DateTime.Today;
     }
 
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
 
-        if (Mode == "edit" && Item != null)
+        if (Mode == "edit" && !string.IsNullOrWhiteSpace(HikeId))
         {
-            TitleLabel.Text = "Edit Hike";
-            NameEntry.Text = Item.Name;
-            LocationEntry.Text = Item.Location;
-            DatePicker.Date = Item.Date;
-            ParkingSwitch.IsToggled = Item.Parking;
-            LengthEntry.Text = Item.LengthKm.ToString(CultureInfo.InvariantCulture);
-            DescEditor.Text = Item.Description;
-            DifficultyPicker.SelectedIndex = Math.Clamp(Item.Difficulty - 1, 0, 4);
+            _editing = await _repo.GetByIdAsync(HikeId);
+            if (_editing != null)
+            {
+                TitleLabel.Text = "Edit Hike";
+                NameEntry.Text = _editing.Name;
+                LocationEntry.Text = _editing.Location;
+                DatePicker.Date = _editing.Date;
+                ParkingSwitch.IsToggled = _editing.Parking;
+                LengthEntry.Text = _editing.LengthKm.ToString(CultureInfo.InvariantCulture);
+                DescEditor.Text = _editing.Description;
+                DifficultyPicker.SelectedIndex = Math.Clamp(_editing.Difficulty - 1, 0, 4);
+                return;
+            }
         }
-        else
-        {
-            TitleLabel.Text = "Add Hike";
-        }
+
+        TitleLabel.Text = "Add Hike";
     }
 
     private async void OnSaveClicked(object sender, EventArgs e)
     {
-        // basic validation
         if (string.IsNullOrWhiteSpace(NameEntry.Text)) { await DisplayAlert("Required", "Name is required", "OK"); return; }
         if (string.IsNullOrWhiteSpace(LocationEntry.Text)) { await DisplayAlert("Required", "Location is required", "OK"); return; }
         if (string.IsNullOrWhiteSpace(LengthEntry.Text) || !double.TryParse(LengthEntry.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out var lenKm))
-        { await DisplayAlert("Invalid", "Length (km) is required and must be a number", "OK"); return; }
+        { await DisplayAlert("Invalid", "Length (km) must be a number", "OK"); return; }
 
-        int difficulty = (DifficultyPicker.SelectedIndex >= 0 ? DifficultyPicker.SelectedIndex + 1 : 3);
+        var difficulty = (DifficultyPicker.SelectedIndex >= 0 ? DifficultyPicker.SelectedIndex + 1 : 3);
 
-        if (Mode == "edit" && Item != null)
+        if (_editing != null)
         {
-            Item.Name = NameEntry.Text!.Trim();
-            Item.Location = LocationEntry.Text!.Trim();
-            Item.Date = DatePicker.Date;
-            Item.Parking = ParkingSwitch.IsToggled;
-            Item.LengthKm = lenKm;
-            Item.Difficulty = difficulty;
-            Item.Description = DescEditor.Text?.Trim() ?? string.Empty;
+            _editing.Name = NameEntry.Text!.Trim();
+            _editing.Location = LocationEntry.Text!.Trim();
+            _editing.Date = DatePicker.Date;
+            _editing.Parking = ParkingSwitch.IsToggled;
+            _editing.LengthKm = lenKm;
+            _editing.Difficulty = difficulty;
+            _editing.Description = DescEditor.Text?.Trim() ?? string.Empty;
 
-            // later: update in SQLite, then pop
-            await DisplayAlert("Updated", "Hike updated (UI-only).", "OK");
-            await Shell.Current.GoToAsync("..");
+            await _repo.UpdateAsync(_editing);
+            await DisplayAlert("Updated", "Hike updated.", "OK");
         }
         else
         {
@@ -75,19 +82,26 @@ public partial class HikeFormPage : ContentPage
                 Difficulty = difficulty,
                 Description = DescEditor.Text?.Trim() ?? string.Empty
             };
-
-            // UI-only add: find MainPage and add to collection
-            if (Shell.Current?.CurrentPage?.Navigation?.NavigationStack?.FirstOrDefault() is MainPage main)
-            {
-                main.Hikes.Add(newHike);
-            }
-            await DisplayAlert("Saved", "Hike added (UI-only).", "OK");
-            await Shell.Current.GoToAsync("..");
+            await _repo.InsertAsync(newHike);
+            await DisplayAlert("Saved", "Hike added.", "OK");
         }
+
+        await Shell.Current.GoToAsync("..");
     }
 
     private async void OnCancelClicked(object sender, EventArgs e)
     {
+        await Shell.Current.GoToAsync("..");
+    }
+
+    private async void OnDeleteClicked(object sender, EventArgs e)
+    {
+        if (_editing == null) return;
+        var ok = await DisplayAlert("Delete", $"Delete \"{_editing.Name}\"?", "Delete", "Cancel");
+        if (!ok) return;
+
+        await _repo.DeleteAsync(_editing.Id);
+        await DisplayAlert("Deleted", "Hike deleted.", "OK");
         await Shell.Current.GoToAsync("..");
     }
 }

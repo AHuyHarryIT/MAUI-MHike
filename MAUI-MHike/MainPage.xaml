@@ -13,6 +13,19 @@
                 Aspect="AspectFit"
                 SemanticProperties.Description="dot net bot in a race car number eight" />
 
+            <Image Source="{Binding PhotoPath}"
+                   HeightRequest="120"
+                   Aspect="AspectFill">
+                <Image.Triggers>
+                    <DataTrigger TargetType="Image" Binding="{Binding PhotoPath}" Value="">
+                        <Setter Property="IsVisible" Value="False" />
+                    </DataTrigger>
+                    <DataTrigger TargetType="Image" Binding="{Binding PhotoPath}" Value="{x:Null}">
+                        <Setter Property="IsVisible" Value="False" />
+                    </DataTrigger>
+                </Image.Triggers>
+            </Image>
+
             <Label
                 Text="Hello, World!"
                 Style="{StaticResource Headline}"

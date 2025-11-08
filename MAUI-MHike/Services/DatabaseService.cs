@@ -32,6 +32,18 @@ public class DatabaseService : IDatabaseService
         // Create tables if not exist
         await Connection.CreateTableAsync<Models.Hike>();
         await Connection.CreateTableAsync<Models.Observation>();
+
+        try
+        {
+            // quick existence check
+            var cols = await Connection.QueryScalarsAsync<string>("PRAGMA table_info(Hikes);");
+            var hasPhoto = cols.Any(s => s.Contains("PhotoPath", StringComparison.OrdinalIgnoreCase));
+            if (!hasPhoto)
+            {
+                await Connection.ExecuteAsync("ALTER TABLE Hikes ADD COLUMN PhotoPath TEXT;");
+            }
+        }
+        catch { /* ignore if already added */ }
     }
 }
 

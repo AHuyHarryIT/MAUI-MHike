@@ -75,6 +75,20 @@
                     Placeholder="Description (optional)"
                     AutoSize="TextChanges"
                     MinimumHeightRequest="80" />
+            
+            <!-- Image preview -->
+            <Frame Padding="0" HasShadow="False" BackgroundColor="{DynamicResource SecondaryContainer}">
+                <Image x:Name="PhotoImage"
+                       HeightRequest="200"
+                       Aspect="AspectFill"
+                       Margin="0,0,0,8" />
+            </Frame>
+
+            <!-- Photo actions -->
+            <HorizontalStackLayout Spacing="12">
+                <Button Text="Choose Photo" Clicked="OnChoosePhotoClicked" />
+                <Button Text="Take Photo"   Clicked="OnTakePhotoClicked" />
+            </HorizontalStackLayout>
 
             <!-- Buttons -->
             <HorizontalStackLayout Spacing="12"

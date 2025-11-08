@@ -4,23 +4,22 @@ using System.Globalization;
 
 namespace MAUI_MHike.Views;
 
-
 [QueryProperty(nameof(Mode), "Mode")]
 [QueryProperty(nameof(HikeId), "HikeId")]
 public partial class HikeFormPage : ContentPage
 {
     private readonly IHikeRepository _repo;
-
-    public string Mode { get; set; } = "add";  // "add" | "edit"
+    public string Mode { get; set; } = "add";
     public string? HikeId { get; set; }
     private Hike? _editing;
+    private string? _pendingPhotoPath;
 
     public HikeFormPage(IHikeRepository repo)
     {
         InitializeComponent();
         _repo = repo;
 
-        DifficultyPicker.SelectedIndex = 2; // default 3 - Medium
+        DifficultyPicker.SelectedIndex = 2;
         DatePicker.Date = DateTime.Today;
     }
 
@@ -41,17 +40,90 @@ public partial class HikeFormPage : ContentPage
                 LengthEntry.Text = _editing.LengthKm.ToString(CultureInfo.InvariantCulture);
                 DescEditor.Text = _editing.Description;
                 DifficultyPicker.SelectedIndex = Math.Clamp(_editing.Difficulty - 1, 0, 4);
+                _pendingPhotoPath = _editing.PhotoPath;
+                LoadPhoto(_pendingPhotoPath);
                 return;
             }
         }
 
         TitleLabel.Text = "Add Hike";
+        LoadPhoto(null);
+    }
+
+    private void LoadPhoto(string? path)
+    {
+        if (!string.IsNullOrWhiteSpace(path) && File.Exists(path))
+            PhotoImage.Source = ImageSource.FromFile(path);
+        else
+            PhotoImage.Source = null;
+    }
+
+    // --- Photo pick ---
+    private async void OnChoosePhotoClicked(object sender, EventArgs e)
+    {
+        try
+        {
+            var file = await FilePicker.PickAsync(new PickOptions
+            {
+                PickerTitle = "Choose a photo",
+                FileTypes = FilePickerFileType.Images
+            });
+            if (file == null) return;
+
+            // Copy to app storage
+            var saved = await SaveFileToAppDataAsync(file.FullPath);
+            _pendingPhotoPath = saved;
+            LoadPhoto(saved);
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Error", $"Failed to choose photo: {ex.Message}", "OK");
+        }
+    }
+
+    // --- Photo capture ---
+    private async void OnTakePhotoClicked(object sender, EventArgs e)
+    {
+        try
+        {
+            if (!MediaPicker.Default.IsCaptureSupported)
+            {
+                await DisplayAlert("Not supported", "Camera capture not supported on this device.", "OK");
+                return;
+            }
+
+            var photo = await MediaPicker.Default.CapturePhotoAsync();
+            if (photo == null) return;
+
+            var saved = await SaveFileToAppDataAsync(photo.FullPath);
+            _pendingPhotoPath = saved;
+            LoadPhoto(saved);
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Error", $"Failed to take photo: {ex.Message}", "OK");
+        }
+    }
+
+    private async Task<string> SaveFileToAppDataAsync(string sourcePath)
+    {
+        var ext = Path.GetExtension(sourcePath);
+        var fileName = $"hike_{Guid.NewGuid():N}{ext}";
+        var dest = Path.Combine(FileSystem.AppDataDirectory, fileName);
+
+        await using var src = File.OpenRead(sourcePath);
+        await using var dst = File.Open(dest, FileMode.Create, FileAccess.Write, FileShare.None);
+        await src.CopyToAsync(dst);
+
+        return dest;
     }
 
     private async void OnSaveClicked(object sender, EventArgs e)
     {
-        if (string.IsNullOrWhiteSpace(NameEntry.Text)) { await DisplayAlert("Required", "Name is required", "OK"); return; }
-        if (string.IsNullOrWhiteSpace(LocationEntry.Text)) { await DisplayAlert("Required", "Location is required", "OK"); return; }
+        if (string.IsNullOrWhiteSpace(NameEntry.Text))
+        { await DisplayAlert("Required", "Name is required", "OK"); return; }
+        if (string.IsNullOrWhiteSpace(LocationEntry.Text))
+        { await DisplayAlert("Required", "Location is required", "OK"); return; }
         if (string.IsNullOrWhiteSpace(LengthEntry.Text) || !double.TryParse(LengthEntry.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out var lenKm))
         { await DisplayAlert("Invalid", "Length (km) must be a number", "OK"); return; }
 
@@ -66,6 +138,7 @@ public partial class HikeFormPage : ContentPage
             _editing.LengthKm = lenKm;
             _editing.Difficulty = difficulty;
             _editing.Description = DescEditor.Text?.Trim() ?? string.Empty;
+            _editing.PhotoPath = _pendingPhotoPath;
 
             await _repo.UpdateAsync(_editing);
             await DisplayAlert("Updated", "Hike updated.", "OK");
@@ -80,7 +153,8 @@ public partial class HikeFormPage : ContentPage
                 Parking = ParkingSwitch.IsToggled,
                 LengthKm = lenKm,
                 Difficulty = difficulty,
-                Description = DescEditor.Text?.Trim() ?? string.Empty
+                Description = DescEditor.Text?.Trim() ?? string.Empty,
+                PhotoPath = _pendingPhotoPath
             };
             await _repo.InsertAsync(newHike);
             await DisplayAlert("Saved", "Hike added.", "OK");
@@ -94,16 +168,6 @@ public partial class HikeFormPage : ContentPage
         await Shell.Current.GoToAsync("..");
     }
 
-    private async void OnDeleteClicked(object sender, EventArgs e)
-    {
-        if (_editing == null) return;
-        var ok = await DisplayAlert("Delete", $"Delete \"{_editing.Name}\"?", "Delete", "Cancel");
-        if (!ok) return;
-
-        await _repo.DeleteAsync(_editing.Id);
-        await DisplayAlert("Deleted", "Hike deleted.", "OK");
-        await Shell.Current.GoToAsync("..");
-    }
     private async void OnOpenObservations(object sender, EventArgs e)
     {
         if (_editing == null)
@@ -112,7 +176,7 @@ public partial class HikeFormPage : ContentPage
             return;
         }
         await Shell.Current.GoToAsync(nameof(ObservationListPage), true, new Dictionary<string, object> {
-        { "HikeId", _editing.Id }
-    });
+            { "HikeId", _editing.Id }
+        });
     }
 }

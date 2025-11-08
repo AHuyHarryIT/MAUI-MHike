@@ -28,5 +28,11 @@
 	</array>
 	<key>XSAppIconAssets</key>
 	<string>Assets.xcassets/appicon.appiconset</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Take a photo for your hike.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Save picked photos into app storage.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Select a photo for your hike.</string>
 </dict>
 </plist>

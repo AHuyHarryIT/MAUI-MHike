@@ -104,4 +104,15 @@ public partial class HikeFormPage : ContentPage
         await DisplayAlert("Deleted", "Hike deleted.", "OK");
         await Shell.Current.GoToAsync("..");
     }
+    private async void OnOpenObservations(object sender, EventArgs e)
+    {
+        if (_editing == null)
+        {
+            await DisplayAlert("Not available", "Save the hike first, then add observations.", "OK");
+            return;
+        }
+        await Shell.Current.GoToAsync(nameof(ObservationListPage), true, new Dictionary<string, object> {
+        { "HikeId", _editing.Id }
+    });
+    }
 }

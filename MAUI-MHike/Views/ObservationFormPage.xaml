@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="MAUI_MHike.Views.ObservationFormPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             Title="Observation">
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="12">
+            <Editor x:Name="NoteEditor" Placeholder="Observation note *" AutoSize="TextChanges" />
+            <Label x:Name="TimeLabel" Text="Time: --:--" TextColor="{DynamicResource Secondary}" />
+            <Editor x:Name="CommentsEditor" Placeholder="Comments (optional)" AutoSize="TextChanges" MinimumHeightRequest="80" />
+            <HorizontalStackLayout Spacing="12">
+                <Button Text="Save" Clicked="OnSaveClicked" />
+                <Button Text="Cancel" Clicked="OnCancelClicked" />
+            </HorizontalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

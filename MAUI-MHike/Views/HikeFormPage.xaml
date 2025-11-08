@@ -5,10 +5,15 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     Title="Hike">
 
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Observations"
+                     Clicked="OnOpenObservations" />
+    </ContentPage.ToolbarItems>
+
     <ScrollView>
         <VerticalStackLayout Padding="16" Spacing="12">
 
-            <!-- Dynamic title -->
+            <!-- Title (changes automatically) -->
             <Label x:Name="TitleLabel"
                    Text="Add Hike"
                    FontSize="22"
@@ -27,12 +32,13 @@
 
             <!-- Date -->
             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
-                <Label Text="Date" VerticalOptions="Center" />
+                <Label Text="Date"
+                       VerticalOptions="Center" />
                 <DatePicker x:Name="DatePicker"
                             Grid.Column="1" />
             </Grid>
 
-            <!-- Parking switch -->
+            <!-- Parking Switch -->
             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
                 <Label Text="Parking available"
                        VerticalOptions="Center" />
@@ -40,12 +46,12 @@
                         Grid.Column="1" />
             </Grid>
 
-            <!-- Length -->
+            <!-- Length (km) -->
             <Entry x:Name="LengthEntry"
                    Placeholder="Length (km) *"
                    Keyboard="Numeric" />
 
-            <!-- Difficulty -->
+            <!-- Difficulty Picker -->
             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
                 <Label Text="Difficulty"
                        VerticalOptions="Center" />

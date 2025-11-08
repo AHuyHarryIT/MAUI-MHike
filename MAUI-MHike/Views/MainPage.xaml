@@ -4,61 +4,116 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     Title="Hikes">
-    <Grid RowDefinitions="Auto,*"
-        Padding="16"
-        RowSpacing="8">
+
+    <!-- Toolbar -->
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Filters" Clicked="OnToggleFiltersClicked" />
+    </ContentPage.ToolbarItems>
+
+    <Grid RowDefinitions="Auto,Auto,*" Padding="16" RowSpacing="8">
 
         <!-- Search bar + Add button -->
         <Grid Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="8">
             <SearchBar x:Name="SearchBar"
-                Placeholder="Search by name or location"
-                SearchButtonPressed="SearchBar_SearchButtonPressed" />
+                       Placeholder="Search by name or location"
+                       TextChanged="SearchBar_TextChanged" />
             <Button Grid.Column="1"
-                Text="+ Add"
-                Clicked="OnAddClicked"
-                BackgroundColor="{DynamicResource Primary}"
-                TextColor="White" />
+                    Text="+ Add"
+                    Clicked="OnAddClicked"
+                    BackgroundColor="{DynamicResource Primary}"
+                    TextColor="White" />
         </Grid>
 
-        <!-- Wrap CollectionView inside RefreshView -->
-        <RefreshView
+        <!-- Filters panel (collapsible) -->
+        <VerticalStackLayout
             Grid.Row="1"
-            x:Name="RefreshContainer"
-            Refreshing="OnRefreshing">
+            x:Name="FiltersPanel"
+            IsVisible="False"
+            Spacing="8">
 
-            <CollectionView
-                x:Name="HikesView"
-                ItemsSource="{Binding Hikes}">
+            <!-- Date range -->
+            <Grid ColumnDefinitions="Auto,*,Auto,*,Auto" ColumnSpacing="8">
+                <CheckBox x:Name="UseDateRange" VerticalOptions="Center" CheckedChanged="OnFilterChanged" />
+                <Label Grid.Column="1" Text="From" VerticalOptions="Center" />
+                <DatePicker Grid.Column="2" x:Name="FromDatePicker" DateSelected="OnFilterChanged" />
+                <Label Grid.Column="3" Text="To" VerticalOptions="Center" />
+                <DatePicker Grid.Column="4" x:Name="ToDatePicker" DateSelected="OnFilterChanged" />
+            </Grid>
 
+            <!-- Parking -->
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                <Label Text="Parking" VerticalOptions="Center" />
+                <Picker Grid.Column="1" x:Name="ParkingPicker" Title="Parking" SelectedIndexChanged="OnFilterChanged">
+                    <Picker.Items>
+                        <x:String>Any</x:String>
+                        <x:String>Yes</x:String>
+                        <x:String>No</x:String>
+                    </Picker.Items>
+                </Picker>
+            </Grid>
+
+            <!-- Difficulty min/max -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                <VerticalStackLayout>
+                    <Label Text="Min difficulty" />
+                    <Picker x:Name="DiffMinPicker" Title="Min difficulty" SelectedIndexChanged="OnFilterChanged">
+                        <Picker.Items>
+                            <x:String>Any</x:String>
+                            <x:String>1</x:String>
+                            <x:String>2</x:String>
+                            <x:String>3</x:String>
+                            <x:String>4</x:String>
+                            <x:String>5</x:String>
+                        </Picker.Items>
+                    </Picker>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Grid.Column="1">
+                    <Label Text="Max difficulty" />
+                    <Picker x:Name="DiffMaxPicker" Title="Max difficulty" SelectedIndexChanged="OnFilterChanged">
+                        <Picker.Items>
+                            <x:String>Any</x:String>
+                            <x:String>1</x:String>
+                            <x:String>2</x:String>
+                            <x:String>3</x:String>
+                            <x:String>4</x:String>
+                            <x:String>5</x:String>
+                        </Picker.Items>
+                    </Picker>
+                </VerticalStackLayout>
+            </Grid>
+
+            <!-- Actions -->
+            <HorizontalStackLayout HorizontalOptions="End" Spacing="8" Margin="0,4,0,0">
+                <Button Text="Clear" Clicked="OnClearFiltersClicked" />
+            </HorizontalStackLayout>
+        </VerticalStackLayout>
+
+        <!-- List with pull-to-refresh + swipe delete -->
+        <RefreshView Grid.Row="2" x:Name="RefreshContainer" Refreshing="OnRefreshing">
+            <CollectionView x:Name="HikesView" ItemsSource="{Binding Hikes}">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <SwipeView>
                             <SwipeView.RightItems>
                                 <SwipeItems Mode="Reveal">
                                     <SwipeItem Text="Delete"
-                                        IconImageSource="trash.png"
-                                        BackgroundColor="{DynamicResource ErrorContainer}"
-                                        Invoked="OnDeleteSwipeInvoked" />
+                                               BackgroundColor="{DynamicResource ErrorContainer}"
+                                               Invoked="OnDeleteSwipeInvoked" />
                                 </SwipeItems>
                             </SwipeView.RightItems>
 
-                            <Frame Margin="0,6,0,0"
-                                Padding="12"
-                                HasShadow="False"
-                                CornerRadius="8"
-                                BackgroundColor="{DynamicResource SecondaryContainer}">
+                            <Frame Margin="0,6,0,0" Padding="12" HasShadow="False" CornerRadius="8"
+                                   BackgroundColor="{DynamicResource SecondaryContainer}">
                                 <VerticalStackLayout Spacing="4">
-                                    <Label Text="{Binding Name}"
-                                        FontAttributes="Bold"
-                                        FontSize="18" />
+                                    <Label Text="{Binding Name}" FontAttributes="Bold" FontSize="18" />
                                     <Label Text="{Binding Location}" />
                                     <Label Text="{Binding Date, StringFormat='{}{0:yyyy-MM-dd}'}"
-                                        TextColor="{DynamicResource Secondary}" />
-                                    <Label Text="{Binding Meta}"
-                                        TextColor="{DynamicResource Primary}" />
+                                           TextColor="{DynamicResource Secondary}" />
+                                    <Label Text="{Binding Meta}" TextColor="{DynamicResource Primary}" />
                                 </VerticalStackLayout>
 
-                                <!-- Tap to edit (doesn't conflict with swipe) -->
+                                <!-- Tap to edit -->
                                 <Frame.GestureRecognizers>
                                     <TapGestureRecognizer Tapped="OnItemTapped" />
                                 </Frame.GestureRecognizers>
@@ -68,6 +123,5 @@
                 </CollectionView.ItemTemplate>
             </CollectionView>
         </RefreshView>
-
     </Grid>
 </ContentPage>

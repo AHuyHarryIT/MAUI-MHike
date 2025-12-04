@@ -35,7 +35,7 @@ public partial class MainPage : ContentPage
 
     private async Task ReloadAsync()
     {
-        _all = await _repo.GetAllAsync(); // get all; we'll filter in memory
+        _all = await _repo.GetAllAsync(); // get all; filter in memory
         ApplyFiltersAndSearch();
         if (RefreshContainer.IsRefreshing) RefreshContainer.IsRefreshing = false;
     }
